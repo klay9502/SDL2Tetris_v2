@@ -9,5 +9,8 @@ public:
 	bool	Init( void );
 	void	Loop( void );
 	void	Release( void );
+
+private:
+	CServerSocket* m_pServerSocket;
 };
 

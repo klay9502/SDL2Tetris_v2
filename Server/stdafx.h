@@ -5,6 +5,9 @@
 
 #pragma once
 
+#define PORT_NUMBER	9000
+#define MAX_BUFSIZE	512
+#define MAX_CLIENT	2
 
 #include "targetver.h"
 
@@ -12,6 +15,9 @@
 #include <WinSock2.h>
 #include <process.h>
 #include <string>
+#include <vector>
+#include <thread>
 
+#include "ServerSocket.h"
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
