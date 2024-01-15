@@ -52,7 +52,7 @@ bool CServerSocket::Init( void )
 	return true;
 }
 
-bool CServerSocket::Loop( void )
+bool CServerSocket::Loop( CSQLManager* pSQLManager )
 {
 	m_TempSet = m_ReadSet;
 	// 소켓 상태 변화 감지
@@ -72,6 +72,22 @@ bool CServerSocket::Loop( void )
 		if( socket == m_ListenSocket )
 		{
 			this->AddClient();
+
+			if( m_ClientList.size() < 3 )
+			{
+				GANE_INFO gameInfoBuf = {STATE_WAIT, NULL};
+				fprintf( stdout, "INFO::ServerSocket::Loop() - [Client No.%d] Waiting another client.\n", m_ClientList.back().id);
+				send( m_ClientList.back().socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+			}
+
+			if( m_ClientList.size() == 2 )
+			{
+				GANE_INFO gameInfoBuf = {STATE_READY, NULL};
+				for( int j = 0; j < m_ClientList.size(); j++ )
+				{
+					send( m_ClientList[j].socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+				}
+			}
 		}
 		// 기존 클라이언트 소켓에서 데이터를 수신했을 경우
 		else
@@ -85,13 +101,60 @@ bool CServerSocket::Loop( void )
 
 				char buf[MAX_BUFSIZE] = {};
 
+				// 클라이언트 닫혔을 때 처리
 				if( recv( m_ClientList[j].socket, buf, MAX_BUFSIZE, 0) <= 0 )
 				{
 					this->DelClient( j );
 				}
 				else
 				{
-					fprintf( stdout, "INFO::ServerSocket::Loop() - [Client No.%d] Input Data.\n", m_ClientList[j].id);
+					// 그 외 데이터 수신의 경우 처리
+
+					std::string str(buf);
+
+ 					if( str == "READY" )
+					{
+						m_ClientList[j].state = STATE_READY;
+						strcpy_s( buf, "S_READY" );
+						send( m_ClientList[j].socket, buf, MAX_BUFSIZE, 0 );
+						fprintf( stdout, "INFO::ServerSocket::Loop() - [Client No.%d] Player is Ready.\n", m_ClientList[j].id);
+					}
+
+					// 플레이어 모두가 준비 했을 때 처리
+					// 이는 개선이 필요한 코드임
+					if( m_ClientList[0].state == STATE_READY &&  m_ClientList[1].state == STATE_READY )
+					{
+						GANE_INFO gameInfoBuf = {STATE_PLAY, NULL};
+						m_ClientList[0].state = STATE_PLAY;
+						send( m_ClientList[0].socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+						m_ClientList[1].state = STATE_PLAY;
+						send( m_ClientList[1].socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+						fprintf( stdout, "INFO::ServerSocket::Loop() - GAME START!\n" );
+					}
+
+					if( str == "GAMEOVER" )
+					{
+						m_ClientList[j].state = STATE_GAMEOVER;
+						fprintf( stdout, "INFO::ServerSocket::Loop() - [Client No.%d] GAME OVER.\n", m_ClientList[j].id);
+
+						if( m_ClientList[0].state == STATE_GAMEOVER )
+						{
+							GANE_INFO gameInfoBuf = {STATE_GAMEOVER, NULL};
+							send( m_ClientList[0].socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+							gameInfoBuf.gameState = STATE_WINNER;
+							send( m_ClientList[1].socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+						}
+						else
+						{
+							GANE_INFO gameInfoBuf = {STATE_WINNER, NULL};
+							send( m_ClientList[0].socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+							gameInfoBuf.gameState = STATE_GAMEOVER;
+							send( m_ClientList[1].socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+						}
+
+						pSQLManager->InsertPlayerScore( m_ClientList[0].nickname );
+						pSQLManager->InsertPlayerScore( m_ClientList[1].nickname );
+					}
 				}
 			}
 		}
@@ -122,6 +185,7 @@ void CServerSocket::AddClient( void )
 	newClient.socket = accept( m_ListenSocket, ( struct sockaddr* )&addr, &lenAddr );
 	recv( newClient.socket, buf, MAX_BUFSIZE, 0 );
 	newClient.nickname = std::string( buf );
+	newClient.state = STATE_WAIT;
 
 	fprintf( stdout, "INFO::ServerSocket::AddClient() - New Client(No.%d) Detected, Nickname: %s, IP: %s\n", newClient.id, newClient.nickname.c_str(), inet_ntoa( addr.sin_addr ) );
 	m_ClientList.push_back( newClient );	// 배열에 클라이언트 추가

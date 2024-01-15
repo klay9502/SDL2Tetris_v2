@@ -20,4 +20,11 @@
 
 #include "ServerSocket.h"
 
+// SQL
+#include <sql.h>
+#include <sqltypes.h>
+#include <sqlext.h>
+
+#include "SQLManager.h"
+
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.

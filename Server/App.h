@@ -11,6 +11,7 @@ public:
 	void	Release( void );
 
 private:
-	CServerSocket* m_pServerSocket;
+	CServerSocket*	m_pServerSocket;
+	CSQLManager*	m_pSQLManager;
 };
 

@@ -10,7 +10,7 @@ int main( void )
 
 	if( !app.Init() )
 	{
-		fprintf( stderr, "에러::main.cpp - app 클래스 초기화 실패.\n" );
+		fprintf( stderr, "ERROR::main.cpp - Init()\n" );
 		app.Release();
 		return 1;
 	}

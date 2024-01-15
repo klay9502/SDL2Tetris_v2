@@ -1,11 +1,29 @@
 #pragma once
 
+enum _eGameState
+{
+	STATE_WAIT = 0,
+	STATE_READY,
+	STATE_PLAY,
+	STATE_GAMEOVER,
+	STATE_WINNER,
+};
+
 typedef struct _SOCKET_INFO
 {
 	int			id;
 	SOCKET		socket;
 	std::string nickname;
+	enum _eGameState state;
 } SOCKET_INFO;
+
+typedef struct _GAME_INFO
+{
+	enum _eGameState	gameState;
+	int					signal;
+} GANE_INFO;
+
+class CSQLManager;
 
 class CServerSocket
 {
@@ -14,7 +32,7 @@ public:
 	~CServerSocket(void);
 
 	bool	Init( void );
-	bool	Loop( void );
+	bool	Loop( CSQLManager* pSQLManager );
 	void	Release( void );
 
 	void	AddClient( void );

@@ -52,12 +52,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\Klay\Documents\development\External_Lib\SDL2_ttf-2.20.2\include;C:\Users\Klay\Documents\development\External_Lib\SDL2-2.28.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\jmkim\Documents\Development\External_Libs\SDL2_ttf-2.20.2\include;C:\Users\jmkim\Documents\Development\External_Libs\SDL2-2.28.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\Klay\Documents\development\External_Lib\SDL2_ttf-2.20.2\lib\x86;C:\Users\Klay\Documents\development\External_Lib\SDL2-2.28.5\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\jmkim\Documents\Development\External_Libs\SDL2_ttf-2.20.2\lib\x86;C:\Users\jmkim\Documents\Development\External_Libs\SDL2-2.28.5\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>ws2_32.lib;SDL2.lib;SDL2main.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -84,6 +84,7 @@
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="ServerSocket.h" />
+    <ClInclude Include="SQLManager.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -91,6 +92,7 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ServerSocket.cpp" />
+    <ClCompile Include="SQLManager.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
