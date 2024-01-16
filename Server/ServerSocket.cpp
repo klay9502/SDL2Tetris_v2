@@ -72,6 +72,7 @@ bool CServerSocket::Loop( CSQLManager* pSQLManager )
 		if( socket == m_ListenSocket )
 		{
 			this->AddClient();
+			pSQLManager->InitClientDBData( &m_ClientList.back() );
 
 			if( m_ClientList.size() < 3 )
 			{
@@ -111,7 +112,8 @@ bool CServerSocket::Loop( CSQLManager* pSQLManager )
 					// 그 외 데이터 수신의 경우 처리
 
 					std::string str(buf);
-
+					
+					// 준비 신호
  					if( str == "READY" )
 					{
 						m_ClientList[j].state = STATE_READY;
@@ -132,6 +134,7 @@ bool CServerSocket::Loop( CSQLManager* pSQLManager )
 						fprintf( stdout, "INFO::ServerSocket::Loop() - GAME START!\n" );
 					}
 
+					// 게임 오버 신호
 					if( str == "GAMEOVER" )
 					{
 						m_ClientList[j].state = STATE_GAMEOVER;
@@ -141,19 +144,46 @@ bool CServerSocket::Loop( CSQLManager* pSQLManager )
 						{
 							GANE_INFO gameInfoBuf = {STATE_GAMEOVER, NULL};
 							send( m_ClientList[0].socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+							m_ClientList[0].loseCount += 1;
 							gameInfoBuf.gameState = STATE_WINNER;
 							send( m_ClientList[1].socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+							m_ClientList[1].winCount += 1;
 						}
 						else
 						{
 							GANE_INFO gameInfoBuf = {STATE_WINNER, NULL};
 							send( m_ClientList[0].socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+							m_ClientList[0].winCount += 1;
 							gameInfoBuf.gameState = STATE_GAMEOVER;
 							send( m_ClientList[1].socket, ( char* )&gameInfoBuf, MAX_BUFSIZE, 0 );
+							m_ClientList[1].loseCount += 1;
 						}
 
-						pSQLManager->InsertPlayerScore( m_ClientList[0].nickname );
-						pSQLManager->InsertPlayerScore( m_ClientList[1].nickname );
+						recv( m_ClientList[0].socket, reinterpret_cast<char*>(&m_ClientList[0].hiScore), sizeof( m_ClientList[0].hiScore ), 0 );
+						recv( m_ClientList[1].socket, reinterpret_cast<char*>(&m_ClientList[1].hiScore), sizeof( m_ClientList[1].hiScore ), 0 );
+
+						// printf("%d - %d\n", 0, m_ClientList[0].hiScore);
+						// printf("%d - %d\n", 1, m_ClientList[1].hiScore);
+						
+						pSQLManager->UpdateClientDBData( &m_ClientList[0] );
+						pSQLManager->UpdateClientDBData( &m_ClientList[1] );
+					}
+
+					if ( str == "RANK" )
+					{
+						strcpy_s( buf, "DATA_RANK" );
+						send( m_ClientList[j].socket, buf, MAX_BUFSIZE, 0 );
+
+						int printSize = pSQLManager->getPrintSize();
+
+						for( int i = 1; i <= printSize; i++ )
+						{
+							std::string temp = pSQLManager->getRankString( i );
+							send( m_ClientList[j].socket, temp.c_str(), temp.length(), 0 );
+						}
+
+						strcpy_s( buf, "S_RANK" );
+						send( m_ClientList[j].socket, buf, MAX_BUFSIZE, 0 );
 					}
 				}
 			}
@@ -185,6 +215,9 @@ void CServerSocket::AddClient( void )
 	newClient.socket = accept( m_ListenSocket, ( struct sockaddr* )&addr, &lenAddr );
 	recv( newClient.socket, buf, MAX_BUFSIZE, 0 );
 	newClient.nickname = std::string( buf );
+	newClient.winCount = 0;
+	newClient.loseCount = 0;
+	newClient.hiScore = 0;
 	newClient.state = STATE_WAIT;
 
 	fprintf( stdout, "INFO::ServerSocket::AddClient() - New Client(No.%d) Detected, Nickname: %s, IP: %s\n", newClient.id, newClient.nickname.c_str(), inet_ntoa( addr.sin_addr ) );

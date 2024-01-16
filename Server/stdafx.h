@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <algorithm>
 
 #include "ServerSocket.h"
 

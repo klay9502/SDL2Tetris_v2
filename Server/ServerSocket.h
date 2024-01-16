@@ -14,6 +14,9 @@ typedef struct _SOCKET_INFO
 	int			id;
 	SOCKET		socket;
 	std::string nickname;
+	int			winCount;
+	int			loseCount;
+	int			hiScore;
 	enum _eGameState state;
 } SOCKET_INFO;
 
